@@ -1,0 +1,79 @@
+grammar dk.sdu.mmmi.mdsd.Math with org.eclipse.xtext.common.Terminals
+
+generate math "http://www.sdu.dk/mmmi/mdsd/Math"
+
+MathExp:
+    "program" progName=ID 
+    ext += Ext*
+    variables += VarBinding*
+;
+
+VarBinding:
+    'var' name=ID '=' expression=(Exp | VarExt)
+;
+
+VarExt:
+	name=ID link=Link 
+;
+Link:
+	'(' MethodRefs ')'
+;
+
+MethodRefs:
+	{MethodRefs} (ref+=Ref ','?)* 
+;
+Ref:
+	ref=[Binding] | Numb
+;
+Numb:
+	ref=INT
+;
+
+Ext:
+    "external" name=MethodName?
+;
+
+MethodName:
+	name=ID sig=MethodSignature
+;
+MethodSignature:
+	'(' Args ')'
+;
+Args:
+	{Args} (name+=ID ','?)*
+;
+/* 
+SQRT returns External:
+   {SQRT} method='sqrt(int)' | 'sqrt('arg=[Binding]')'    
+;
+
+PI returns External:
+    {PI} method="pi()"
+;
+
+POW returns External:
+    {POW}  method="pow(int,int)" | "pow("arg1=[Binding]","arg2=[Binding]")" 
+;
+*/
+Exp returns Expression:
+    Factor (( {Plus.left=current} '+' | {Minus.left=current}  '-' ) right=Factor)*
+;
+Factor returns Expression:
+    Primary (({Mult.left=current} '*' | {Div.left=current}  '/'  ) right=Primary)*
+;
+
+Primary returns Expression:
+    {MathNumber} value=INT  | '(' Exp ')'  |  VariableUse | LetBinding
+;
+
+LetBinding:
+    'let' name=ID '=' binding=Exp 'in' body=Exp 'end'
+;
+
+Binding:
+    VarBinding | LetBinding 
+;
+
+VariableUse:
+    ref = [Binding]
+;
